@@ -5,3 +5,4 @@ pandas
 matplotlib
 scikit-learn
 tensorboardX
+threadpoolctl >= 3.0

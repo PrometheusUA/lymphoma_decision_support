@@ -24,6 +24,7 @@ def get_orlov_datasets(
     train_subimages_num=TRAIN_SUBIMAGES_NUM,
     num_loaders_workers=NUM_LOADERS_WORKERS,
     batch_size=BATCH_SIZE,
+    subimage_size=SUBIMAGE_SIZE,
 ):
     torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
 
@@ -31,11 +32,15 @@ def get_orlov_datasets(
     for i in range(train_subimages_num):
         data_i = SubimageFolder(
             orlov_dataset_folder,
-            transform=torchvision.transforms.Compose(
-                [
-                    transforms.ToTensor(),
-                    transforms.RandomCrop(SUBIMAGE_SIZE),
-                ]
+            transform=(
+                torchvision.transforms.Compose(
+                    [
+                        transforms.ToTensor(),
+                        transforms.RandomCrop(subimage_size),
+                    ]
+                )
+                if subimage_size
+                else transforms.ToTensor()
             ),
         )
         train_val_datas.append(data_i)
@@ -44,11 +49,15 @@ def get_orlov_datasets(
 
     data_test = SubimageFolder(
         orlov_dataset_folder,
-        transform=torchvision.transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.RandomCrop(SUBIMAGE_SIZE),
-            ]
+        transform=(
+            torchvision.transforms.Compose(
+                [
+                    transforms.ToTensor(),
+                    transforms.RandomCrop(subimage_size),
+                ]
+            )
+            if subimage_size
+            else transforms.ToTensor()
         ),
     )
 
@@ -73,15 +82,15 @@ def get_orlov_datasets(
         patients_class_train = orlov_patients_class.iloc[val_split_id:]
 
         for patient_files in patients_class_test.loc[:, "patient_files"]:
-            patient_files=eval(patient_files)
+            patient_files = eval(patient_files)
             test_files.extend(patient_files)
 
         for patient_files in patients_class_val.loc[:, "patient_files"]:
-            patient_files=eval(patient_files)
+            patient_files = eval(patient_files)
             val_files.extend(patient_files)
 
         for patient_files in patients_class_train.loc[:, "patient_files"]:
-            patient_files=eval(patient_files)
+            patient_files = eval(patient_files)
             train_files.extend(patient_files)
 
     train_indices, test_indices, val_indices = [], [], []
@@ -138,7 +147,12 @@ def get_orlov_datasets(
         persistent_workers=(num_loaders_workers > 0),
     )
 
-    return train_loader, val_loader, test_loader, (data, data_test)
+    return (
+        train_loader,
+        val_loader,
+        test_loader,
+        (data, data_test, len(train_indices), len(val_indices), len(test_indices)),
+    )
 
 
 if __name__ == "__main__":

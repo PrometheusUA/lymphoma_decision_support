@@ -29,6 +29,11 @@ class SubimageFolder(torchvision.datasets.ImageFolder):
     def get_image_subimages_batch(self, index: int):
         image_tensor, class_idx = super().__getitem__(index)
 
+        image_batch, reconstruction_info = self.get_pure_image_subimages(image_tensor)
+
+        return image_batch, class_idx, reconstruction_info
+    
+    def get_pure_image_subimages(self, image_tensor):
         _, image_height, image_width = image_tensor.size()
 
         assert (
@@ -64,4 +69,4 @@ class SubimageFolder(torchvision.datasets.ImageFolder):
             self.desired_size,
         )
 
-        return image_batch, class_idx, reconstruction_info
+        return image_batch, reconstruction_info

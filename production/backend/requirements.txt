@@ -1,0 +1,8 @@
+flask
+Flask-Smorest
+marshmallow
+python-dotenv
+gunicorn
+flask-cors
+torch
+torchvision
