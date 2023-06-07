@@ -16,8 +16,8 @@ function ViewPage() {
     const [loading, setLoading] = useState(true);
     const [probsListItems, setProbsListItems] = useState();
     const [chosenClassId, setChosenClassId] = useState(0);
-    // const [viewer, setViewer] = useState();
-    // const [viewerMap, setViewerMap] = useState();
+    const [viewer, setViewer] = useState();
+    const [viewerMap, setViewerMap] = useState();
 
     // let dzi_data = {}
 
@@ -231,6 +231,9 @@ function ViewPage() {
                 viewerMap.addHandler('zoom', viewerMapHandler);
                 viewer.addHandler('pan', viewerHandler);
                 viewerMap.addHandler('pan', viewerMapHandler);
+
+                setViewer(viewer);
+                setViewerMap(viewerMap);
             }
             catch (e) {
             }
@@ -257,6 +260,70 @@ function ViewPage() {
 
     const chooseViewMap = (classId) => {
         setChosenClassId(classId);
+
+        viewer && viewer.destroy();
+        viewerMap && viewerMap.destroy();
+
+        let new_viewer = new OpenSeadragon({
+            id: "view",
+            prefixUrl: SERVER_URL,
+            timeout: 120000,
+            animationTime: 0.5,
+            blendTime: 0.1,
+            constrainDuringPan: true,
+            maxZoomPixelRatio: 2,
+            minZoomImageRatio: 1,
+            visibilityRatio: 1,
+            zoomPerScroll: 2,
+            tileSources: [`${SERVER_URL}/deepzoom/${id}.dzi`]
+        });
+
+        let new_viewerMap = new OpenSeadragon({
+            id: "viewmap",
+            prefixUrl: SERVER_URL,
+            timeout: 120000,
+            animationTime: 0.5,
+            blendTime: 0.1,
+            constrainDuringPan: true,
+            maxZoomPixelRatio: 2,
+            minZoomImageRatio: 1,
+            visibilityRatio: 1,
+            zoomPerScroll: 2,
+            tileSources: [`${SERVER_URL}/deepzoom/${id}-${classId}.dzi`]
+        });
+
+        let viewerLeading = false;
+        let viewerMapLeading = false;
+
+        let viewerHandler = function () {
+            if (viewerMapLeading) {
+                return;
+            }
+
+            viewerLeading = true;
+            new_viewerMap.viewport.zoomTo(new_viewer.viewport.getZoom());
+            new_viewerMap.viewport.panTo(new_viewer.viewport.getCenter());
+            viewerLeading = false;
+        };
+
+        let viewerMapHandler = function () {
+            if (viewerLeading) {
+                return;
+            }
+
+            viewerMapLeading = true;
+            new_viewer.viewport.zoomTo(new_viewerMap.viewport.getZoom());
+            new_viewer.viewport.panTo(new_viewerMap.viewport.getCenter());
+            viewerMapLeading = false;
+        };
+
+        new_viewer.addHandler('zoom', viewerHandler);
+        new_viewerMap.addHandler('zoom', viewerMapHandler);
+        new_viewer.addHandler('pan', viewerHandler);
+        new_viewerMap.addHandler('pan', viewerMapHandler);
+
+        setViewer(new_viewer);
+        setViewerMap(new_viewerMap);
     }
 
 
